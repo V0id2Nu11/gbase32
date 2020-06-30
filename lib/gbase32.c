@@ -30,17 +30,24 @@ g_base32_decode_step(
 {
     const guchar* in_ptr;
     const guchar* in_end;
-    guchar last[7] = {0x00};
+    guchar* out_ptr;
+    guchar last[6] = {0x00};
     guchar c;
     guchar rank;
     guint64 v;
     gint i;
     
+    g_return_val_if_fail(in != NULL || len == 0, 0);
+    g_return_val_if_fail(out != NULL, 0);
+    g_return_val_if_fail(state != NULL, 0);
+    g_return_val_if_fail(save != NULL, 0);
 
-    in_ptr = (const guchar*) in;
-    in_end = in_ptr + len;
+    if (len == 0) {
+        return 0;
+    }
 
-    guchar* out_ptr = out;
+    in_end = (const guchar*) in + len;
+    out_ptr = out;
 
     v = *save;
     i = *state;
@@ -50,11 +57,11 @@ g_base32_decode_step(
         last[0] = '=';
     }
 
+    in_ptr = (const guchar*) in;
     while (in_ptr < in_end) {
         c = *in_ptr++;
         rank = mime_base32_rank[c];
         if (rank != 0xff) {
-            last[6] = last[5];
             last[5] = last[4];
             last[4] = last[3];
             last[3] = last[2];
@@ -65,18 +72,19 @@ g_base32_decode_step(
             i++;
             if (i == 8) {
                 *out_ptr++ = v >> 32;
-                if (last[6] != '=') {
+                if (last[5] != '=') {
                     *out_ptr++ = v >> 24;
                 }
-                if (last[4] != '=') {
+                if (last[3] != '=') {
                     *out_ptr++ = v >> 16;
                 }
-                if (last[3] != '=') {
+                if (last[2] != '=') {
                     *out_ptr++ = v >> 8;
                 }
-                if (last[1] != '=') {
+                if (last[0] != '=') {
                     *out_ptr++ = v;
                 }
+                i = 0;
             }
         }
     }
@@ -95,6 +103,9 @@ g_base32_decode(
     gsize input_length;
     gint state = 0;
     guint64 save = 0;
+
+    g_return_val_if_fail(text != NULL, NULL);
+    g_return_val_if_fail(out_len != NULL, NULL);
 
     input_length = strlen(text);
 
