@@ -1,17 +1,20 @@
-#include "gbase32.h"
 #include "config.h"
-#include <stdio.h>
+#include "gbase32.h"
 #include <glib.h>
+#include <stdio.h>
 
 
 static gboolean verbose = FALSE;
 static gchar* text2decode = NULL;
-static gboolean show_hex = FALSE;
+static gboolean show_hex = TRUE;
+static gboolean show_string = FALSE;
 
 static GOptionEntry entries[] = {
     {"decode", 'd', 0, G_OPTION_ARG_STRING, &text2decode,
         "Decode <text> to data", NULL},
     {"hex", 'h', 0, G_OPTION_ARG_NONE, &show_hex,
+        "Show decode result in hex", NULL},
+    {"string", 's', 0, G_OPTION_ARG_NONE, &show_string,
         "Show decode result in hex", NULL},
     {"verbose", 'v', 0, G_OPTION_ARG_NONE, &verbose,
         "Be verbose", NULL},
@@ -73,8 +76,10 @@ main(
         gsize out_len = 0;
         if (show_hex) {
             g_print("%s\n", decode2hex(text2decode, &out_len));
-        } else {
+        } else if (show_string) {
             g_print("%s\n", decode2string(text2decode, &out_len));
+        } else {
+            g_print("option parsing failed: choose hex or string to show\n");
         }
         g_free(text2decode);
     }
